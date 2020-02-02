@@ -1,30 +1,21 @@
 package com.takas125.cameraxsample.fragments
 
-import android.content.Intent
-import android.graphics.Color
 import android.graphics.Matrix
-import android.graphics.drawable.ColorDrawable
-import android.hardware.Camera
 import android.media.MediaScannerConnection
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
 import android.view.*
 import android.webkit.MimeTypeMap
-import android.widget.ImageButton
 import androidx.camera.core.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import com.takas125.cameraxsample.MainActivity
 import com.takas125.cameraxsample.R
 import kotlinx.android.synthetic.main.camera_ui_container.*
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
@@ -38,6 +29,8 @@ class CameraFragment : Fragment() {
     private lateinit var mainExecutor: Executor
 
     private var imageCapture: ImageCapture? = null
+    private var displayId = -1
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +79,24 @@ class CameraFragment : Fragment() {
         // try rebuilding the project or updating the appcompat dependency to
         // version 1.1.0 or higher.
         CameraX.bindToLifecycle(this, preview)
+
+        // Wait for the views to be properly laid out
+        viewFinder.post {
+            // Keep track of the display in which this view is attached
+            displayId = viewFinder.display.displayId
+
+            // Build UI controls and bind all camera use cases
+            updateCameraUi()
+//            bindCameraUseCases()
+
+            // 一旦コメントアウト
+            // In the background, load latest photo taken (if any) for gallery thumbnail
+//            lifecycleScope.launch(Dispatchers.IO) {
+//                outputDirectory.listFiles { file ->
+//                    EXTENSION_WHITELIST.contains(file.extension.toUpperCase())
+//                }?.max()?.let { setGalleryThumbnail(it) }
+//            }
+        }
     }
 
     private fun updateCameraUi() {
@@ -113,16 +124,6 @@ class CameraFragment : Fragment() {
                 // Setup image capture listener which is triggered after photo has been taken
                 imageCapture.takePicture(photoFile, metadata, mainExecutor, imageSavedListener)
 
-                // We can only change the foreground Drawable using API level 23+ API
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                    // Display flash animation to indicate that photo was captured
-                    container.postDelayed({
-                        container.foreground = ColorDrawable(Color.WHITE)
-                        container.postDelayed(
-                            { container.foreground = null }, ANIMATION_FAST_MILLIS)
-                    }, ANIMATION_SLOW_MILLIS)
-                }
             }
         }
 
@@ -165,21 +166,6 @@ class CameraFragment : Fragment() {
         override fun onImageSaved(photoFile: File) {
             Log.d(TAG, "Photo capture succeeded: ${photoFile.absolutePath}")
 
-            // We can only change the foreground Drawable using API level 23+ API
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-                // Update the gallery thumbnail with latest picture taken
-                setGalleryThumbnail(photoFile)
-            }
-
-            // Implicit broadcasts will be ignored for devices running API
-            // level >= 24, so if you only target 24+ you can remove this statement
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                requireActivity().sendBroadcast(
-                    Intent(Camera.ACTION_NEW_PICTURE, Uri.fromFile(photoFile))
-                )
-            }
-
             // If the folder selected is an external media directory, this is unnecessary
             // but otherwise other apps will not be able to access our images unless we
             // scan them using [MediaScannerConnection]
@@ -187,24 +173,6 @@ class CameraFragment : Fragment() {
                 .getMimeTypeFromExtension(photoFile.extension)
             MediaScannerConnection.scanFile(
                 context, arrayOf(photoFile.absolutePath), arrayOf(mimeType), null)
-        }
-    }
-
-    private fun setGalleryThumbnail(file: File) {
-        // Reference of the view that holds the gallery thumbnail
-        val thumbnail = container.findViewById<ImageButton>(R.id.photo_view_button)
-
-        // Run the operations in the view's thread
-        thumbnail.post {
-
-            // Remove thumbnail padding
-            thumbnail.setPadding(resources.getDimension(R.dimen.stroke_small).toInt())
-
-            // Load thumbnail into circular button using Glide
-            Glide.with(thumbnail)
-                .load(file)
-                .apply(RequestOptions.circleCropTransform())
-                .into(thumbnail)
         }
     }
 
