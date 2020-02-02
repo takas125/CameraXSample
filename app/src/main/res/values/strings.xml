@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CameraXSample</string>
+
+    // MainFragment
+    <string name="top_text">Tap this button to take your picture</string>
+    <string name="button_label">Tap here</string>
+
+    // camera
+    <string name="capture_button_alt">Capture</string>
+</resources>
