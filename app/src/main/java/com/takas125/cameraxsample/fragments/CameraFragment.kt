@@ -106,7 +106,8 @@ class CameraFragment : Fragment() {
         }
 
         // Inflate a new view containing all UI for controlling the camera
-        val controls = View.inflate(requireContext(), R.layout.camera_ui_container, container)
+        View.inflate(requireContext(), R.layout.camera_ui_container, container)
+
 
         // Listener for button used to capture photo
         camera_capture_button.setOnClickListener{
