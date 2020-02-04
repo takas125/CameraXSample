@@ -7,4 +7,12 @@
 
     // camera
     <string name="capture_button_alt">Capture</string>
+
+    // Gallery
+    <string name="delete_confirm_title">Confirm</string>
+    <string name="delete_confirm_message">Are you sure to delete this photo?</string>
+    <string name="share_hint">Share using</string>
+    <string name="back_button_alt">Back</string>
+    <string name="share_button_alt">Share</string>
+    <string name="delete_button_alt">Delete</string>
 </resources>
